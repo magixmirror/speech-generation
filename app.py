@@ -68,14 +68,29 @@ def generate_and_save_audio(text, selected_speaker, text_temp, waveform_temp):
         denoised_filepath = os.path.join(static_folder, denoised_filename)
         torchaudio.save(denoised_filepath, denoised.cpu(), sr)
 
-    return f"./static/{filename}", f"./static/{denoised_filename}"
+    denoised_filepath = None
+    if apply_denoise:
+        model = pretrained.dns64().cuda()
+        wavFile, sr = torchaudio.load(filepath)
+        wavFile = convert_audio(wavFile.cuda(), sr, SAMPLE_RATE, model.chin)
+        with torch.no_grad():
+            denoised = model(wavFile[None])[0]
+            denoised_filename = f"denoised_output_{timestamp}.wav"
+            denoised_filepath = os.path.join(static_folder, denoised_filename)
+            torchaudio.save(denoised_filepath, denoised.cpu(), sr)
+
+    return f"./static/{filename}", f"./static/{denoised_filename}" if denoised_filepath else None
 
 
-speakers_list = []
+speakers_list_v1 = []
+speakers_list_v2 = []
 
 for lang, code in SUPPORTED_LANGS:
     for n in range(10):
-        speakers_list.append(f"{code}_speaker_{n}")
+        speakers_list_v2.append(f"v2/{code}_speaker_{n}")
+        speakers_list_v1.append(f"{code}_speaker_{n}")
+
+speakers_list = speakers_list_v2 + speakers_list_v1
 
 input_text = gr.Textbox(label="Input Text", lines=4, placeholder="Enter text here...")
 text_temp = gr.Slider(
@@ -92,13 +107,14 @@ waveform_temp = gr.Slider(
     label="Waveform temperature",
     info="1.0 more diverse, 0.1 more conservative",
 )
+apply_denoise = gr.Checkbox(label="Apply Denoiser", default=False)
 output_audio = gr.Audio(label="Generated Audio", type="filepath")
 clean_audio = gr.Audio(label="Denoised Audio", type="filepath")
 speaker = gr.Dropdown(speakers_list, value=speakers_list[0], label="Acoustic Prompt")
 
 io = gr.Interface(
     generate_and_save_audio,
-    inputs=[input_text, speaker, text_temp, waveform_temp],
+    inputs=[input_text, speaker, text_temp, waveform_temp, apply_denoise],
     outputs=[output_audio, clean_audio],
     title="Generate Audio",
     description="Enter text and hear the generated audio.",
