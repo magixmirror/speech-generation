@@ -1,5 +1,7 @@
 # Generated WAV files
 static/
+custom_prompts/*
+!custom_prompts/_drop_custom_prompts_here.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

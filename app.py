@@ -1,4 +1,5 @@
 import os
+import glob
 from datetime import datetime
 import numpy as np
 
@@ -19,8 +20,6 @@ from denoiser.dsp import convert_audio
 import gradio as gr
 
 nltk.download("punkt")
-
-HISTORY_PROMPT = "en_speaker_6"
 
 preload_models()
 
@@ -90,7 +89,15 @@ for lang, code in SUPPORTED_LANGS:
         speakers_list_v2.append(f"v2/{code}_speaker_{n}")
         speakers_list_v1.append(f"{code}_speaker_{n}")
 
-speakers_list = speakers_list_v2 + speakers_list_v1
+custom_prompts = []
+# Define the directory
+dir_path = 'custom_prompts'
+
+# Use glob to get all the .npz files in the directory
+custom_prompts = glob.glob(os.path.join(dir_path, '*.npz'))
+custom_prompts.sort()
+
+speakers_list = custom_prompts + speakers_list_v2 + speakers_list_v1
 
 input_text = gr.Textbox(label="Input Text", lines=4, placeholder="Enter text here...")
 text_temp = gr.Slider(
