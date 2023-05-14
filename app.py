@@ -25,7 +25,7 @@ HISTORY_PROMPT = "en_speaker_6"
 preload_models()
 
 
-def generate_and_save_audio(text, selected_speaker, text_temp, waveform_temp):
+def generate_and_save_audio(text, selected_speaker, text_temp, waveform_temp, apply_denoise):
     sentences = nltk.sent_tokenize(text)
 
     chunks = [""]
